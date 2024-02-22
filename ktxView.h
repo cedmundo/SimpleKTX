@@ -12,6 +12,11 @@ typedef enum {
   E_ERROR_COUNT,
 } StatusCode;
 
+typedef struct {
+  StatusCode status;
+  unsigned spId;
+} Shader;
+
 // Exit: Call system exit and prints error if needed.
 int Exit(StatusCode status);
 
@@ -31,51 +36,8 @@ void AppEndFrame();
 // Closes the app window and clears all internal data.
 void AppClose();
 
-// LoadTextFile: load text contents from file.
-char *LoadTextFile(const char *name);
+// Load, compile and link a shader program using a fragment and vertex shaders.
+Shader AppLoadShader(const char *vs_path, const char *fs_path);
 
-// UnloadTextFile: unload text contents.
-void UnloadTextFile(char *);
-
-#define CHECK_TEXT_FILE_ERROR(data, file)                                      \
-  do {                                                                         \
-    if ((data) == NULL) {                                                      \
-      fprintf(stderr, "cannot load file: " file "\n");                         \
-      status = E_CANNOT_LOAD_FILE;                                             \
-      goto terminate;                                                          \
-    }                                                                          \
-  } while (0)
-
-#define CHECK_SHADER_COMPILE_ERROR(shader_id)                                  \
-  do {                                                                         \
-    GLint success = 0;                                                         \
-    char compile_log[512] = {0};                                               \
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);                     \
-    if (!success) {                                                            \
-      glGetShaderInfoLog(shader_id, 512, NULL, compile_log);                   \
-      fprintf(stderr, "error compiling shader: %s\n", compile_log);            \
-      status = E_SHADER_COMPILE_ERROR;                                         \
-      goto terminate;                                                          \
-    }                                                                          \
-  } while (0)
-
-#define CHECK_SHADER_LINK_ERROR(program_id)                                    \
-  do {                                                                         \
-    GLint success = 0;                                                         \
-    char link_log[512] = {0};                                                  \
-    glGetProgramiv(program_id, GL_LINK_STATUS, &success);                      \
-    if (!success) {                                                            \
-      glGetShaderInfoLog(program_id, 512, NULL, link_log);                     \
-      fprintf(stderr, "error linking shader: %s\n", link_log);                 \
-      status = E_SHADER_LINK_ERROR;                                            \
-      goto terminate;                                                          \
-    }                                                                          \
-  } while (0)
-
-#define CHECK_ERROR(cond, e)                                                   \
-  do {                                                                         \
-    if ((cond)) {                                                              \
-      status = e;                                                              \
-      goto terminate;                                                          \
-    }                                                                          \
-  } while (0)
+// Destroy a shader if needed.
+void AppDestroyShader(Shader shader);

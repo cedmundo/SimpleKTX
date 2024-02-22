@@ -23,11 +23,13 @@ typedef struct {
 
 static App app = {0};
 
+char *LoadTextFile(const char *name);
+void UnloadTextFile(char *);
+
 int Exit(StatusCode status) {
   assert(status >= SUCCESS && status < E_ERROR_COUNT &&
          "invalid arg status: outside range");
   if (status != SUCCESS) {
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
     assert(fprintf(stderr, "error: %s \n", strerror(errno)) > 0);
     return -1;
   }
@@ -114,6 +116,91 @@ void AppEndFrame() {
   assert(app.window != NULL && "invalid state: app.window is not initialized");
   glfwPollEvents();
   glfwSwapBuffers(app.window);
+}
+
+Shader AppLoadShader(const char *vs_path, const char *fs_path) {
+  Shader shader = {0};
+  int glStatus = 0;
+  char *vs_source = NULL;
+  char *fs_source = NULL;
+  unsigned vsId = 0;
+  unsigned fsId = 0;
+
+  vs_source = LoadTextFile(vs_path);
+  if (vs_source == NULL) {
+    // TODO(cedmundo): Add log messages
+    shader.status = E_CANNOT_LOAD_FILE;
+    goto terminate;
+  }
+
+  fs_source = LoadTextFile(fs_path);
+  if (fs_source == NULL) {
+    // TODO(cedmundo): Add log messages
+    shader.status = E_CANNOT_LOAD_FILE;
+    goto terminate;
+  }
+
+  vsId = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vsId, 1, (const char **)&vs_source, NULL);
+  glCompileShader(vsId);
+  glGetShaderiv(vsId, GL_COMPILE_STATUS, &glStatus);
+  if (glStatus != 0) {
+    // TODO(cedmundo): Add log messages
+    shader.status = E_SHADER_COMPILE_ERROR;
+    goto terminate;
+  }
+
+  fsId = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fsId, 1, (const char **)&fs_source, NULL);
+  glCompileShader(fsId);
+  glGetShaderiv(fsId, GL_COMPILE_STATUS, &glStatus);
+  if (glStatus != 0) {
+    // TODO(cedmundo): Add log messages
+    shader.status = E_SHADER_COMPILE_ERROR;
+    goto terminate;
+  }
+
+  shader.spId = glCreateProgram();
+  glAttachShader(shader.spId, vsId);
+  glAttachShader(shader.spId, fsId);
+  glLinkProgram(shader.spId);
+  glGetShaderiv(shader.spId, GL_LINK_STATUS, &glStatus);
+  if (glStatus != 0) {
+    // TODO(cedmundo): Add log messages
+    shader.status = E_SHADER_LINK_ERROR;
+    goto terminate;
+  }
+
+terminate:
+  if (vsId != 0) {
+    glDetachShader(shader.spId, vsId);
+    glDeleteShader(vsId);
+  }
+
+  if (fsId != 0) {
+    glDetachShader(shader.spId, fsId);
+    glDeleteShader(fsId);
+  }
+
+  if (shader.status != SUCCESS) {
+    AppDestroyShader(shader);
+  }
+
+  if (vs_source != NULL) {
+    free(vs_source);
+  }
+
+  if (fs_source != NULL) {
+    free(fs_source);
+  }
+
+  return shader;
+}
+
+void AppDestroyShader(Shader shader) {
+  if (shader.spId != 0) {
+    glDeleteProgram(shader.spId);
+  }
 }
 
 char *LoadTextFile(const char *name) {

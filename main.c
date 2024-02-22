@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "ktxView.h"
 
 #define WINDOW_WIDTH 640
@@ -7,16 +5,19 @@
 #define WINDOW_TITLE "ktxView"
 
 int main() {
-  StatusCode status;
-
-  status = AppInit(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+  StatusCode status = AppInit(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   if (status != SUCCESS) {
     AppClose();
     return Exit(status);
   }
 
-  // TODO(cedmundo): Load and compile shaders.
-  // TODO(cedmundo): Create and load plane.
+  Shader shader = AppLoadShader("data/plane.vs", "data/plane.fs");
+  if (shader.status != SUCCESS) {
+    AppClose();
+    return Exit(shader.status);
+  }
+
+  // TODO(cedmundo): Create and upload plane.
   // TODO(cedmundo): Load and upload texture.
 
   // Main loop
