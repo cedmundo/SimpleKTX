@@ -3,7 +3,7 @@ project(ktxView
   DESCRIPTION "ktxView is an example project of the KTX2 texture usage"
   HOMEPAGE_URL "https://github.com/cedmundo/ktxView"
   VERSION "1.0.0"
-  LANGUAGES C)
+  LANGUAGES C CXX)
 
 # Set global configuration
 set(CMAKE_C_STANDARD 11)
@@ -22,4 +22,4 @@ target_sources(ktxView
   INTERFACE ktxView.h
   PRIVATE ktxView.c main.c)
 target_link_libraries(ktxView
-  PRIVATE glfw glad)
+  PRIVATE glfw glad ktx_read)

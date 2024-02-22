@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 typedef enum {
   SUCCESS,
@@ -13,6 +14,22 @@ typedef enum {
 
 // Exit: Call system exit and prints error if needed.
 int Exit(StatusCode status);
+
+// Startup app window and initial setup.
+StatusCode AppInit(int window_width, int window_height,
+                   const char *window_title);
+
+// Return true if app should be closed.
+bool AppShouldClose();
+
+// Setup the next frame.
+void AppBeginFrame();
+
+// Commit frame and poll events.
+void AppEndFrame();
+
+// Closes the app window and clears all internal data.
+void AppClose();
 
 // LoadTextFile: load text contents from file.
 char *LoadTextFile(const char *name);
