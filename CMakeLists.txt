@@ -15,8 +15,11 @@ add_definitions("-Wall" "-g")
 # option(EXAMPLE "EXAMPLE" ON)
 
 # HERE(cedmundo): Add vendor libraries
-# add_subdirectory(vendor)
+add_subdirectory(vendor)
 
 add_executable(ktxView)
 target_sources(ktxView
-  PRIVATE main.c)
+  INTERFACE ktxView.h
+  PRIVATE ktxView.c main.c)
+target_link_libraries(ktxView
+  PRIVATE glfw glad)
