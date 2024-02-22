@@ -4,6 +4,9 @@
 #define WINDOW_HEIGHT 480
 #define WINDOW_TITLE "ktxView"
 
+#define PLANE_VS_PATH "assets/plane_vs.glsl"
+#define PLANE_FS_PATH "assets/plane_fs.glsl"
+
 int main() {
   StatusCode status = AppInit(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
   if (status != SUCCESS) {
@@ -11,7 +14,7 @@ int main() {
     return Exit(status);
   }
 
-  Shader shader = AppLoadShader("data/plane.vs", "data/plane.fs");
+  Shader shader = AppLoadShader(PLANE_VS_PATH, PLANE_FS_PATH);
   if (shader.status != SUCCESS) {
     AppClose();
     return Exit(shader.status);
@@ -23,7 +26,7 @@ int main() {
   // Main loop
   while (!AppShouldClose()) {
     AppBeginFrame();
-    // TODO(cemdundo): Bind plane and render it.
+    // TODO(cedmundo): Bind plane and render it.
     AppEndFrame();
   }
 

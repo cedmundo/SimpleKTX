@@ -125,6 +125,7 @@ Shader AppLoadShader(const char *vs_path, const char *fs_path) {
   char *fs_source = NULL;
   unsigned vsId = 0;
   unsigned fsId = 0;
+  char shaderLog[512] = {0};
 
   vs_source = LoadTextFile(vs_path);
   if (vs_source == NULL) {
@@ -140,23 +141,29 @@ Shader AppLoadShader(const char *vs_path, const char *fs_path) {
     goto terminate;
   }
 
+  glStatus = 0;
   vsId = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vsId, 1, (const char **)&vs_source, NULL);
   glCompileShader(vsId);
   glGetShaderiv(vsId, GL_COMPILE_STATUS, &glStatus);
-  if (glStatus != 0) {
+  if (!glStatus) {
     // TODO(cedmundo): Add log messages
     shader.status = E_SHADER_COMPILE_ERROR;
+    glGetShaderInfoLog(vsId, 512, NULL, shaderLog);
+    fprintf(stderr, "cannot compile vertex shader: %s\n", shaderLog);
     goto terminate;
   }
 
+  glStatus = 0;
   fsId = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fsId, 1, (const char **)&fs_source, NULL);
   glCompileShader(fsId);
   glGetShaderiv(fsId, GL_COMPILE_STATUS, &glStatus);
-  if (glStatus != 0) {
+  if (!glStatus) {
     // TODO(cedmundo): Add log messages
     shader.status = E_SHADER_COMPILE_ERROR;
+    glGetShaderInfoLog(fsId, 512, NULL, shaderLog);
+    fprintf(stderr, "cannot compile fragment shader: %s\n", shaderLog);
     goto terminate;
   }
 
@@ -165,11 +172,14 @@ Shader AppLoadShader(const char *vs_path, const char *fs_path) {
   glAttachShader(shader.spId, fsId);
   glLinkProgram(shader.spId);
   glGetShaderiv(shader.spId, GL_LINK_STATUS, &glStatus);
-  if (glStatus != 0) {
+  if (!glStatus) {
     // TODO(cedmundo): Add log messages
     shader.status = E_SHADER_LINK_ERROR;
+    glGetShaderInfoLog(shader.spId, 512, NULL, shaderLog);
+    fprintf(stderr, "cannot link shader program: %s\n", shaderLog);
     goto terminate;
   }
+  shader.status = SUCCESS;
 
 terminate:
   if (vsId != 0) {
