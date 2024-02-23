@@ -10,7 +10,7 @@ add_subdirectory(glfw)
 add_subdirectory(glad)
 
 # LibKTX2
-set(KTX_FEATURE_STATIC_LIBRARY ON CACHE BOOL "Enable static lib" FORCE)
+set(KTX_FEATURE_STATIC_LIBRARY OFF CACHE BOOL "Enable static lib" FORCE)
 set(KTX_FEATURE_DOC OFF CACHE BOOL "Disable docs" FORCE)
 set(KTX_FEATURE_JNI OFF CACHE BOOL "Disable JNI" FORCE)
 set(KTX_FEATURE_PY OFF CACHE BOOL "Disable PY" FORCE)

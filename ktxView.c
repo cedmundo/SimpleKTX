@@ -1,10 +1,16 @@
 #include "ktxView.h"
+
+// Standard libraries
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// TODO(cedmundo): make multiplatform
+#include <dlfcn.h>
+
+// GLAD / GLFW
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -44,6 +50,9 @@ StatusCode AppInit(int window_width, int window_height,
   if (!glfwInit()) {
     return E_CANNOT_INIT_GLFW;
   }
+
+  // Load OpenGL because ktx is kind of dumb
+  dlopen("libGL.so", RTLD_NOW | RTLD_GLOBAL);
 
   // Allow GLFW termination
   app.didInitGLFW = true;
@@ -229,7 +238,6 @@ Texture AppLoadTexture(const char *texPath) {
 
   // upload to GPU
   GLenum glError = 0;
-
   glGenTextures(1, &texture.id);
   result =
       ktxTexture_GLUpload(texture.src, &texture.id, &texture.format, &glError);
@@ -259,10 +267,10 @@ Model AppMakePlane(float dim) {
   // a plane
   float vertices[] = {
       // POSITIONS      COLORS            UVS
-      dim,  dim,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top right
-      dim,  -dim, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom right
-      -dim, -dim, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
-      -dim, dim,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top left
+      dim,  dim,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top right
+      dim,  -dim, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // bottom right
+      -dim, -dim, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom left
+      -dim, dim,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // top left
   };
   unsigned indices[] = {
       0, 1, 3, // first triangle
@@ -308,8 +316,8 @@ void AppRenderModel(Model model) {
   // assert(model.texture.id != 0 &&
   //        "invalid arg model.texture: uninitialized texture");
 
-  // glBindTexture(GL_TEXTURE_2D, model.texture.id);
   { // draw vertex
+    glBindTexture(GL_TEXTURE_2D, model.texture.id);
     glUseProgram(model.shader.spId);
     glBindVertexArray(model.vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.ebo);
