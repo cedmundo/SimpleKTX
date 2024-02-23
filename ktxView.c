@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <ktx.h>
 
 typedef struct {
   bool didInitGLFW;
@@ -23,8 +24,8 @@ typedef struct {
 
 static App app = {0};
 
-char *LoadTextFile(const char *name);
-void UnloadTextFile(char *);
+char *LoadFileContents(const char *name);
+void UnloadFileContents(char *);
 
 int Exit(StatusCode status) {
   assert(status >= SUCCESS && status < E_ERROR_COUNT &&
@@ -118,24 +119,24 @@ void AppEndFrame() {
   glfwSwapBuffers(app.window);
 }
 
-Shader AppLoadShader(const char *vs_path, const char *fs_path) {
+Shader AppLoadShader(const char *vsPath, const char *fsPath) {
   Shader shader = {0};
   int glStatus = 0;
-  char *vs_source = NULL;
-  char *fs_source = NULL;
+  char *vsSource = NULL;
+  char *fsSource = NULL;
   unsigned vsId = 0;
   unsigned fsId = 0;
   char shaderLog[512] = {0};
 
-  vs_source = LoadTextFile(vs_path);
-  if (vs_source == NULL) {
+  vsSource = LoadFileContents(vsPath);
+  if (vsSource == NULL) {
     // TODO(cedmundo): Add log messages
     shader.status = E_CANNOT_LOAD_FILE;
     goto terminate;
   }
 
-  fs_source = LoadTextFile(fs_path);
-  if (fs_source == NULL) {
+  fsSource = LoadFileContents(fsPath);
+  if (fsSource == NULL) {
     // TODO(cedmundo): Add log messages
     shader.status = E_CANNOT_LOAD_FILE;
     goto terminate;
@@ -143,7 +144,7 @@ Shader AppLoadShader(const char *vs_path, const char *fs_path) {
 
   glStatus = 0;
   vsId = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vsId, 1, (const char **)&vs_source, NULL);
+  glShaderSource(vsId, 1, (const char **)&vsSource, NULL);
   glCompileShader(vsId);
   glGetShaderiv(vsId, GL_COMPILE_STATUS, &glStatus);
   if (!glStatus) {
@@ -156,7 +157,7 @@ Shader AppLoadShader(const char *vs_path, const char *fs_path) {
 
   glStatus = 0;
   fsId = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fsId, 1, (const char **)&fs_source, NULL);
+  glShaderSource(fsId, 1, (const char **)&fsSource, NULL);
   glCompileShader(fsId);
   glGetShaderiv(fsId, GL_COMPILE_STATUS, &glStatus);
   if (!glStatus) {
@@ -196,12 +197,12 @@ terminate:
     AppDestroyShader(shader);
   }
 
-  if (vs_source != NULL) {
-    free(vs_source);
+  if (vsSource != NULL) {
+    free(vsSource);
   }
 
-  if (fs_source != NULL) {
-    free(fs_source);
+  if (fsSource != NULL) {
+    free(fsSource);
   }
 
   return shader;
@@ -213,7 +214,117 @@ void AppDestroyShader(Shader shader) {
   }
 }
 
-char *LoadTextFile(const char *name) {
+Texture AppLoadTexture(const char *texPath) {
+  Texture texture = {0};
+  KTX_error_code result = KTX_SUCCESS;
+
+  result = ktxTexture_CreateFromNamedFile(
+      texPath, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &texture.src);
+  if (result != KTX_SUCCESS) {
+    // TODO(cedmundo): Handle KTX_* errors
+    // TODO(cedmundo): Report log error
+    texture.status = E_CANNOT_CREATE_TEXTURE;
+    return texture;
+  }
+
+  // upload to GPU
+  GLenum glError = 0;
+
+  glGenTextures(1, &texture.id);
+  result =
+      ktxTexture_GLUpload(texture.src, &texture.id, &texture.format, &glError);
+  if (result != KTX_SUCCESS) {
+    // TODO(cedmundo): Handle KTX_* errors and glError
+    // TODO(cedmundo): Report log error
+    texture.status = E_CANNOT_UPLOAD_TEXTURE;
+    return texture;
+  }
+
+  return texture;
+}
+
+void AppDestroyTexture(Texture texture) {
+  if (texture.id != 0) {
+    glDeleteTextures(1, &texture.id);
+  }
+
+  if (texture.src != NULL) {
+    ktxTexture_Destroy(texture.src);
+  }
+}
+
+Model AppMakePlane(float dim) {
+  Model model = {0};
+
+  // a plane
+  float vertices[] = {
+      // POSITIONS      COLORS            UVS
+      dim,  dim,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+      dim,  -dim, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+      -dim, -dim, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+      -dim, dim,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // top left
+  };
+  unsigned indices[] = {
+      0, 1, 3, // first triangle
+      1, 2, 3, // second triangle
+  };
+
+  // upload model
+  glGenVertexArrays(1, &model.vao);
+  glGenBuffers(1, &model.vbo);
+  glGenBuffers(1, &model.ebo);
+
+  glBindBuffer(GL_ARRAY_BUFFER, model.vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+
+  // position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
+  // color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  // texture coord attribute
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  return model;
+}
+
+void AppRenderModel(Model model) {
+  assert(model.vao != 0 && "invalid arg model.vao: uninitialized vertex array");
+  assert(model.vbo != 0 && "invalid arg model.vbo: uninitialized array buffer");
+  assert(model.ebo != 0 && "invalid arg model.ebo: uninitialized element buf");
+  assert(model.texture.id != 0 &&
+         "invalid arg model.texture: uninitialized texture");
+
+  glBindTexture(GL_TEXTURE_2D, model.texture.id);
+  glUseProgram(model.shader.spId);
+  glBindVertexArray(model.vao);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void AppDestroyModel(Model model) {
+  if (model.vao != 0) {
+    glDeleteVertexArrays(1, &model.vao);
+  }
+
+  if (model.vbo != 0) {
+    glDeleteBuffers(1, &model.vbo);
+  }
+
+  if (model.ebo != 0) {
+    glDeleteBuffers(1, &model.ebo);
+  }
+}
+
+char *LoadFileContents(const char *name) {
   assert(name != NULL && "invalid arg name: cannot be NULL");
   FILE *file = fopen(name, "re");
   if (file == NULL) {
@@ -236,7 +347,7 @@ char *LoadTextFile(const char *name) {
   return data;
 }
 
-void UnloadTextFile(char *data) {
+void UnloadFileContents(char *data) {
   assert(data != NULL && "invalid arg data: cannot be NULL");
   if (data != NULL) {
     free(data);

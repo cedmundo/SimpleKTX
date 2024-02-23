@@ -6,6 +6,7 @@
 
 #define PLANE_VS_PATH "assets/plane_vs.glsl"
 #define PLANE_FS_PATH "assets/plane_fs.glsl"
+#define PLANE_TEXTURE "assets/plane_tex.ktx"
 
 int main() {
   StatusCode status = AppInit(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
@@ -20,16 +21,29 @@ int main() {
     return Exit(shader.status);
   }
 
-  // TODO(cedmundo): Create and upload plane.
-  // TODO(cedmundo): Load and upload texture.
+  // Make and upload model & texture
+  Model model = AppMakePlane(0.5f);
+
+  Texture texture = AppLoadTexture(PLANE_TEXTURE);
+  if (texture.status != SUCCESS) {
+    AppClose();
+    return Exit(texture.status);
+  }
+
+  // Assign the shader and the texture to the model
+  model.shader = shader;
+  model.texture = texture;
 
   // Main loop
   while (!AppShouldClose()) {
     AppBeginFrame();
-    // TODO(cedmundo): Bind plane and render it.
+    { // Render entities
+      AppRenderModel(model);
+    }
     AppEndFrame();
   }
 
+  AppDestroyModel(model);
   AppClose();
   return Exit(status);
 }
