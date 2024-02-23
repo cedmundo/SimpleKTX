@@ -24,15 +24,15 @@ int main() {
   // Make and upload model & texture
   Model model = AppMakePlane(0.5f);
 
-  Texture texture = AppLoadTexture(PLANE_TEXTURE);
-  if (texture.status != SUCCESS) {
-    AppClose();
-    return Exit(texture.status);
-  }
+  // Texture texture = AppLoadTexture(PLANE_TEXTURE);
+  // if (texture.status != SUCCESS) {
+  //   AppClose();
+  //   return Exit(texture.status);
+  // }
 
   // Assign the shader and the texture to the model
   model.shader = shader;
-  model.texture = texture;
+  // model.texture = texture;
 
   // Main loop
   while (!AppShouldClose()) {

@@ -259,10 +259,10 @@ Model AppMakePlane(float dim) {
   // a plane
   float vertices[] = {
       // POSITIONS      COLORS            UVS
-      dim,  dim,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-      dim,  -dim, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-      -dim, -dim, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-      -dim, dim,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // top left
+      dim,  dim,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top right
+      dim,  -dim, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom right
+      -dim, -dim, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom left
+      -dim, dim,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top left
   };
   unsigned indices[] = {
       0, 1, 3, // first triangle
@@ -274,6 +274,7 @@ Model AppMakePlane(float dim) {
   glGenBuffers(1, &model.vbo);
   glGenBuffers(1, &model.ebo);
 
+  glBindVertexArray(model.vao);
   glBindBuffer(GL_ARRAY_BUFFER, model.vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -294,6 +295,9 @@ Model AppMakePlane(float dim) {
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
   return model;
 }
 
@@ -301,13 +305,19 @@ void AppRenderModel(Model model) {
   assert(model.vao != 0 && "invalid arg model.vao: uninitialized vertex array");
   assert(model.vbo != 0 && "invalid arg model.vbo: uninitialized array buffer");
   assert(model.ebo != 0 && "invalid arg model.ebo: uninitialized element buf");
-  assert(model.texture.id != 0 &&
-         "invalid arg model.texture: uninitialized texture");
+  // assert(model.texture.id != 0 &&
+  //        "invalid arg model.texture: uninitialized texture");
 
-  glBindTexture(GL_TEXTURE_2D, model.texture.id);
-  glUseProgram(model.shader.spId);
-  glBindVertexArray(model.vao);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  // glBindTexture(GL_TEXTURE_2D, model.texture.id);
+  { // draw vertex
+    glUseProgram(model.shader.spId);
+    glBindVertexArray(model.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.ebo);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  }
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 }
 
 void AppDestroyModel(Model model) {
