@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
-project(ktxView
-  DESCRIPTION "ktxView is an example project of the KTX2 texture usage"
-  HOMEPAGE_URL "https://github.com/cedmundo/ktxView"
+project(SimpleKTX
+  DESCRIPTION "SimpleKTX is an example project of the KTX2 texture usage"
+  HOMEPAGE_URL "https://github.com/cedmundo/SimpleKTX"
   VERSION "1.0.0"
   LANGUAGES C CXX)
 
@@ -17,21 +17,21 @@ add_definitions("-Wall" "-g")
 add_subdirectory(vendor)
 
 # Main executable
-add_executable(ktxView)
-target_sources(ktxView
-  INTERFACE ktxView.h
-  PRIVATE ktxView.c main.c)
-target_link_libraries(ktxView
+add_executable(SimpleKTX)
+target_sources(SimpleKTX
+  INTERFACE app.h
+  PRIVATE app.c main.c)
+target_link_libraries(SimpleKTX
   PRIVATE glfw glad ktx_read)
 
 # Copy assets dir
 set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 if(EXISTS "${ASSETS_DIR}")
   add_custom_command(
-    TARGET ktxView PRE_BUILD
+    TARGET SimpleKTX PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/assets")
 
   add_custom_command(
-    TARGET ktxView PRE_BUILD
+    TARGET SimpleKTX PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/assets")
 endif()

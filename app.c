@@ -1,4 +1,4 @@
-#include "ktxView.h"
+#include "app.h"
 
 // Standard libraries
 #include <assert.h>

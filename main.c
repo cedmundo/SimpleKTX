@@ -1,8 +1,8 @@
-#include "ktxView.h"
+#include "app.h"
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
-#define WINDOW_TITLE "ktxView"
+#define WINDOW_TITLE "SimpleKTX"
 
 #define PLANE_VS_PATH "assets/plane_vs.glsl"
 #define PLANE_FS_PATH "assets/plane_fs.glsl"
