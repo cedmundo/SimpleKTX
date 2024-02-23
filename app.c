@@ -267,9 +267,9 @@ Model AppMakePlane(float dim) {
   // a plane
   float vertices[] = {
       // POSITIONS      COLORS            UVS
-      dim,  dim,  0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top right
-      dim,  -dim, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // bottom right
-      -dim, -dim, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom left
+      dim,  dim,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // top right
+      dim,  -dim, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // bottom right
+      -dim, -dim, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // bottom left
       -dim, dim,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // top left
   };
   unsigned indices[] = {

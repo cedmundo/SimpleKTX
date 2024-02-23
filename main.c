@@ -1,7 +1,7 @@
 #include "app.h"
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 800
 #define WINDOW_TITLE "SimpleKTX"
 
 #define PLANE_VS_PATH "assets/plane_vs.glsl"
